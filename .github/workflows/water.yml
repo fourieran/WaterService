@@ -14,6 +14,7 @@ jobs:
         with:
           repository: ${{ secrets.CODE_REPO }}
           token: ${{ secrets.GH_TOKEN }}
+          ref: master
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -46,6 +47,7 @@ jobs:
         with:
           repository: ${{ secrets.CODE_REPO }}
           token: ${{ secrets.GITHUB_TOKEN }}
+          ref: master
 
       - name: ZeroTier
         uses: zerotier/github-action@v1.0.1
