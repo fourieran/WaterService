@@ -1,0 +1,75 @@
+name: Account Service
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 * * * *'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4.1.1
+        with:
+          repository: ${{ secrets.CODE_REPO }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          submodules: true
+          fetch-depth: 0
+          fetch-tags: true
+          filter: blob:limit=100k
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Cache .NET Build
+        uses: actions/cache@v4
+        with:
+          path: |
+            **/bin/
+            **/obj/
+          key: ${{ runner.os }}-dotnet-${{ hashFiles('**/*.cs') }}
+
+      - name: Build
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: dotnet build AccountService/AccountService.csproj --configuration Release
+
+  serve:
+    runs-on: ubuntu-latest
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [1, 2, 3, 4, 5, 6, 7, 8]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4.1.1
+        with:
+          repository: ${{ secrets.CODE_REPO }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          submodules: true
+          fetch-depth: 0
+          fetch-tags: true
+          filter: blob:limit=100k
+
+      - name: ZeroTier
+        uses: zerotier/github-action@v1.0.1
+        with:
+          network_id: ${{ secrets.ZEROTIER_NETWORK_ID }}
+          auth_token: ${{ secrets.ZEROTIER_CENTRAL_TOKEN }}
+
+      - name: Cache .NET Build
+        uses: actions/cache@v4
+        with:
+          path: |
+            **/bin/
+            **/obj/
+          key: ${{ runner.os }}-dotnet-${{ hashFiles('**/*.cs') }}
+
+      - name: Run Account Service
+        env:
+          MONGO_URI: mongodb://${{ secrets.MONGO_SERVER }}:${{ secrets.MONGO_PORT }}
+          MONGO_DATABASE: ${{ secrets.MONGO_DATABASE }}
+        run: dotnet run --project AccountService/AccountService.csproj --no-build --configuration Release
