@@ -14,10 +14,6 @@ jobs:
         with:
           repository: ${{ secrets.CODE_REPO }}
           token: ${{ secrets.GH_TOKEN }}
-          submodules: true
-          fetch-depth: 0
-          fetch-tags: true
-          filter: blob:limit=100k
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -26,6 +22,7 @@ jobs:
 
       - name: Cache .NET Build
         uses: actions/cache@v4
+        id: cache
         with:
           path: |
             **/bin/
@@ -49,10 +46,6 @@ jobs:
         with:
           repository: ${{ secrets.CODE_REPO }}
           token: ${{ secrets.GITHUB_TOKEN }}
-          submodules: true
-          fetch-depth: 0
-          fetch-tags: true
-          filter: blob:limit=100k
 
       - name: ZeroTier
         uses: zerotier/github-action@v1.0.1
